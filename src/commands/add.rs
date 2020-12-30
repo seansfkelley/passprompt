@@ -19,12 +19,25 @@ pub fn command(config: &mut config::Config, args: Args) -> Result<(), Box<dyn st
       prompt_reply_stdout("name: ")?
     }
   };
+
+  if config.passwords.contains_key(&name) {
+    let response = prompt_reply_stdout(
+      format!(
+        "there is already a password named '{}', overwrite (y/n)? ",
+        name
+      )
+      .as_str(),
+    )?;
+    if response != "y" && response != "Y" {
+      return Ok(());
+    }
+  }
+
   let salt = {
     if let Some(salt) = args.salt {
       salt
     } else {
-      // OWASP says salts should be > 16 characters; after base64ing, 12 characters
-      // becomes 16.
+      // OWASP says salts should be > 16 characters; after base64ing, 12 characters becomes 16.
       let mut salt = [0; 12];
       rand::thread_rng().fill_bytes(&mut salt);
       base64::encode(salt)
@@ -40,7 +53,6 @@ pub fn command(config: &mut config::Config, args: Args) -> Result<(), Box<dyn st
     &mut hash,
   );
 
-  // TODO: Make sure this isn't a dupe and/or warn about it.
   config.passwords.insert(
     name,
     config::Password {
