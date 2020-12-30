@@ -4,25 +4,9 @@ use crypto::bcrypt;
 use rand::prelude::*;
 use rpassword::prompt_password_stdout;
 use rprompt::prompt_reply_stdout;
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::fs::{write, OpenOptions};
-use std::io::Read;
-use toml;
 use xdg::BaseDirectories;
 
-#[derive(Serialize, Deserialize, Debug)]
-struct Config {
-    frequency: Option<String>,
-    hash: Option<String>,
-    passwords: HashMap<String, Password>,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct Password {
-    salt: String,
-    hash: String,
-}
+mod config;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let matches = App::new("passprompt")
@@ -55,16 +39,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let xdg_dirs = BaseDirectories::with_prefix("passprompt").unwrap();
     let config_path = xdg_dirs.place_config_file("config.toml")?;
-    let mut config_content = String::new();
-
-    OpenOptions::new()
-        .write(true)
-        .read(true)
-        .create(true)
-        .open(config_path.clone())?
-        .read_to_string(&mut config_content)?;
-
-    let mut config: Config = toml::from_str(&config_content.to_string())?;
+    let mut config = config::Config::load_put_if_absent(&config_path)?;
 
     if let Some(_) = matches.subcommand_matches("list") {
         // TODO: Should not need to unwrap because this list should always be present.
@@ -103,13 +78,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         // TODO: Make sure this isn't a dupe and/or warn about it.
         config.passwords.insert(
             name,
-            Password {
+            config::Password {
                 salt,
                 hash: base64::encode(hash),
             },
         );
-
-        write(config_path, toml::to_string_pretty(&config)?)?;
     } else {
         println!("{}", matches.usage());
     }
