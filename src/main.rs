@@ -1,6 +1,6 @@
 use clap::{crate_version, App, Arg, SubCommand};
 use serde::{Deserialize, Serialize};
-use std::fs::{File, OpenOptions};
+use std::fs::{read_dir, File, OpenOptions};
 use std::io::Read;
 use toml;
 use xdg::BaseDirectories;
@@ -23,6 +23,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let xdg_dirs = BaseDirectories::with_prefix("passprompt").unwrap();
     let config_path = xdg_dirs.place_config_file("config.toml")?;
+    let passwords_path = xdg_dirs.create_config_directory("passwords")?;
     let mut config_content = String::new();
 
     OpenOptions::new()
@@ -34,10 +35,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let config: Config = toml::from_str(&config_content.to_string())?;
 
-    print!("{:?}", config);
-
-    if let Some(matches) = matches.subcommand_matches("list") {
-        // matches
+    if let Some(_) = matches.subcommand_matches("list") {
+        // TODO: Perhaps lighten up some of this ? usage to be more fault-tolerant.
+        for entry in read_dir(passwords_path)? {
+            let path = entry?;
+            if path.file_type()?.is_file() {
+                println!("{}", path.file_name().to_str().unwrap());
+            }
+        }
     }
 
     Ok(())
