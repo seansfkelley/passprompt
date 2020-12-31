@@ -37,7 +37,8 @@ pub fn command(
   let mut success = false;
 
   while tries > 0 {
-    let input = prompt_password_stdout(format!("password for {}: ", entry.0).as_str())?;
+    let input =
+      prompt_password_stdout(format!("[passprompt] password for {}: ", entry.0).as_str())?;
 
     if input.len() > 0 && entry.1.matches(input) {
       success = true;
