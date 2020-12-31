@@ -1,5 +1,5 @@
 use base64;
-use crypto::bcrypt;
+
 use rand::prelude::*;
 use rpassword::prompt_password_stdout;
 use rprompt::prompt_reply_stdout;
@@ -43,23 +43,12 @@ pub fn command(config: &mut config::Config, args: Args) -> Result<(), Box<dyn st
       base64::encode(salt)
     }
   };
+
   let password = prompt_password_stdout("password: ")?;
-  let mut hash = [0; 24];
 
-  bcrypt::bcrypt(
-    12, // 12 is the work factor recommended by OWASP.
-    &salt.clone().into_bytes(),
-    &password.into_bytes(),
-    &mut hash,
-  );
-
-  config.passwords.insert(
-    name,
-    config::Password {
-      salt,
-      hash: base64::encode(hash),
-    },
-  );
+  config
+    .passwords
+    .insert(name, config::Password::create(salt, password));
 
   Ok(())
 }

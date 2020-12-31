@@ -1,3 +1,4 @@
+use crypto::bcrypt;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::error::Error;
@@ -54,5 +55,31 @@ impl Config {
         } else {
             panic!("todo");
         }
+    }
+}
+
+impl Password {
+    pub fn create(salt: String, password: String) -> Password {
+        Password {
+            hash: Password::hash(salt.clone(), password),
+            salt,
+        }
+    }
+
+    pub fn matches(&self, password: String) -> bool {
+        self.hash == Password::hash(self.salt.clone(), password)
+    }
+
+    fn hash(salt: String, password: String) -> String {
+        let mut hash = [0; 24];
+
+        bcrypt::bcrypt(
+            12, // 12 is the work factor recommended by OWASP.
+            &salt.into_bytes(),
+            &password.into_bytes(),
+            &mut hash,
+        );
+
+        base64::encode(hash)
     }
 }

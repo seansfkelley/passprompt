@@ -31,6 +31,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         .help("Salt to use for hashing"),
                 ),
         )
+        .subcommand(
+            SubCommand::with_name("ask").about("Prompt for a random password from the list"),
+        )
         .get_matches();
 
     let xdg_dirs = BaseDirectories::with_prefix("passprompt").unwrap();
@@ -38,7 +41,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut config = config::Config::load_put_if_absent(&config_path)?;
 
     if let Some(_) = matches.subcommand_matches("list") {
-        commands::list(&mut config)?;
+        commands::list(&config)?;
     } else if let Some(matches) = matches.subcommand_matches("add") {
         commands::add(
             &mut config,
@@ -47,11 +50,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 salt: matches.value_of("salt").map(|s| s.to_string()),
             },
         )?;
+        config.store(&config_path)?;
+    } else if let Some(matches) = matches.subcommand_matches("ask") {
+        commands::ask(&config)?;
     } else {
         println!("{}", matches.usage());
     }
-
-    config.store(&config_path)?;
 
     Ok(())
 }
