@@ -83,11 +83,13 @@ impl Config {
         }
     }
 
-    pub fn store(&self, p: &PathBuf) -> Result<(), std::io::Error> {
-        if let Ok(foo) = toml::to_string_pretty(&self) {
-            write(p, foo)
-        } else {
-            panic!("nah");
+    pub fn store(&self, p: &PathBuf) -> Result<(), Box<dyn Error>> {
+        match toml::to_string_pretty(&self) {
+            Ok(contents) => match write(p, contents) {
+                Ok(_) => Ok(()),
+                Err(e) => Err(Box::new(e)),
+            },
+            Err(e) => Err(Box::new(e)),
         }
     }
 }

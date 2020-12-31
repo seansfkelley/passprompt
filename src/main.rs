@@ -46,14 +46,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if let Some(_) = matches.subcommand_matches("list") {
         commands::list(&config)?;
     } else if let Some(matches) = matches.subcommand_matches("add") {
-        commands::add(
+        let did_update = commands::add(
             &mut config,
             commands::AddArgs {
                 name: matches.value_of("name").map(|n| n.to_string()),
                 salt: matches.value_of("salt").map(|s| s.to_string()),
             },
         )?;
-        config.store(&config_path)?;
+        if did_update {
+            config.store(&config_path)?;
+        }
     } else if let Some(matches) = matches.subcommand_matches("ask") {
         commands::ask(&config)?;
     } else {

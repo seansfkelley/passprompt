@@ -11,7 +11,10 @@ pub struct Args {
   pub salt: Option<String>,
 }
 
-pub fn command(config: &mut config::Config, args: Args) -> Result<(), Box<dyn std::error::Error>> {
+pub fn command(
+  config: &mut config::Config,
+  args: Args,
+) -> Result<bool, Box<dyn std::error::Error>> {
   let name = {
     if let Some(name) = args.name {
       name
@@ -29,7 +32,7 @@ pub fn command(config: &mut config::Config, args: Args) -> Result<(), Box<dyn st
       .as_str(),
     )?;
     if response != "y" && response != "Y" {
-      return Ok(());
+      return Ok(false);
     }
   }
 
@@ -50,5 +53,5 @@ pub fn command(config: &mut config::Config, args: Args) -> Result<(), Box<dyn st
     .passwords
     .insert(name, config::PasswordEntry::create(salt, password)?);
 
-  Ok(())
+  Ok(true)
 }
