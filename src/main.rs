@@ -1,8 +1,11 @@
+#![feature(const_generics)]
+
 use clap::{crate_version, App, Arg, SubCommand};
 use xdg::BaseDirectories;
 
 mod commands;
 mod config;
+mod util;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let matches = App::new("passprompt")
@@ -28,7 +31,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         .long("salt")
                         .short("s")
                         .takes_value(true)
-                        .help("Salt to use for hashing"),
+                        .help("16-byte salt to use for hashing, encoded in base64"),
                 ),
         )
         .subcommand(
@@ -38,7 +41,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let xdg_dirs = BaseDirectories::with_prefix("passprompt").unwrap();
     let config_path = xdg_dirs.place_config_file("config.toml")?;
-    let mut config = config::Config::load_put_if_absent(&config_path)?;
+    let mut config = config::Config::load(&config_path)?;
 
     if let Some(_) = matches.subcommand_matches("list") {
         commands::list(&config)?;

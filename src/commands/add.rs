@@ -35,10 +35,10 @@ pub fn command(config: &mut config::Config, args: Args) -> Result<(), Box<dyn st
 
   let salt = {
     if let Some(salt) = args.salt {
+      base64::decode(&salt)?;
       salt
     } else {
-      // OWASP says salts should be > 16 characters; after base64ing, 12 characters becomes 16.
-      let mut salt = [0; 12];
+      let mut salt = [0; 16];
       rand::thread_rng().fill_bytes(&mut salt);
       base64::encode(salt)
     }
@@ -48,7 +48,7 @@ pub fn command(config: &mut config::Config, args: Args) -> Result<(), Box<dyn st
 
   config
     .passwords
-    .insert(name, config::Password::create(salt, password));
+    .insert(name, config::PasswordEntry::create(salt, password)?);
 
   Ok(())
 }

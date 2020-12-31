@@ -1,51 +1,84 @@
 use crypto::bcrypt;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::convert::{From, TryFrom};
 use std::error::Error;
 use std::fs::{write, OpenOptions};
 use std::io::Read;
 use std::path::PathBuf;
 use toml;
 
+use crate::util;
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Config {
     pub frequency: Option<String>,
     pub hash: Option<String>,
-    pub passwords: HashMap<String, Password>,
+    #[serde(default = "HashMap::new")]
+    pub passwords: HashMap<String, PasswordEntry>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(try_from = "String")]
+#[serde(into = "String")]
+pub struct Salt([u8; 16]);
+
+impl TryFrom<String> for Salt {
+    type Error = Box<dyn std::error::Error>;
+
+    fn try_from(s: String) -> Result<Self, Self::Error> {
+        let bytes = base64::decode(s.as_str())?;
+        Ok(Salt(util::byte_vec_to_array(bytes)?))
+    }
+}
+
+impl From<Salt> for String {
+    fn from(s: Salt) -> Self {
+        base64::encode(&s.0)
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(try_from = "String")]
+#[serde(into = "String")]
+pub struct Hash([u8; 24]);
+
+impl TryFrom<String> for Hash {
+    type Error = Box<dyn std::error::Error>;
+
+    fn try_from(s: String) -> Result<Self, Self::Error> {
+        let bytes = base64::decode(s.as_str())?;
+        Ok(Hash(util::byte_vec_to_array(bytes)?))
+    }
+}
+
+impl From<Hash> for String {
+    fn from(s: Hash) -> Self {
+        base64::encode(&s.0)
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Password {
-    pub salt: String,
-    pub hash: String,
+pub struct PasswordEntry {
+    pub salt: Salt,
+    pub hash: Hash,
 }
 
 impl Config {
-    pub fn load_put_if_absent(p: &PathBuf) -> Result<Config, Box<dyn Error>> {
-        let file = OpenOptions::new()
-            .write(true)
-            .create_new(true)
-            .open(p.clone());
+    pub fn load(p: &PathBuf) -> Result<Config, Box<dyn Error>> {
+        let mut config_content = String::new();
 
-        if let Err(f) = file {
-            let mut config_content = String::new();
-            OpenOptions::new()
-                .read(true)
-                .open(p.clone())?
-                .read_to_string(&mut config_content)?;
-            if let Ok(c) = toml::from_str::<Config>(&config_content.to_string()) {
-                Ok(c)
-            } else {
-                panic!("todo");
-            }
-        } else {
-            let c = Config {
-                frequency: None,
-                hash: None,
-                passwords: HashMap::new(),
-            };
-            c.store(&p)?;
+        let file = OpenOptions::new()
+            .read(true)
+            .write(true)
+            .create(true)
+            .open(&p)?
+            .read_to_string(&mut config_content)?;
+
+        if let Ok(c) = toml::from_str::<Config>(&config_content.to_string()) {
             Ok(c)
+        } else {
+            panic!("todo");
         }
     }
 
@@ -58,28 +91,34 @@ impl Config {
     }
 }
 
-impl Password {
-    pub fn create(salt: String, password: String) -> Password {
-        Password {
-            hash: Password::hash(salt.clone(), password),
-            salt,
-        }
+impl PasswordEntry {
+    pub fn create(
+        salt: String,
+        password: String,
+    ) -> Result<PasswordEntry, Box<dyn std::error::Error>> {
+        let salt = Salt::try_from(salt)?;
+        let hash = PasswordEntry::hash(&salt, password)?;
+        Ok(PasswordEntry { salt, hash })
     }
 
     pub fn matches(&self, password: String) -> bool {
-        self.hash == Password::hash(self.salt.clone(), password)
+        if let Ok(h) = PasswordEntry::hash(&self.salt, password) {
+            self.hash.0 == h.0
+        } else {
+            false
+        }
     }
 
-    fn hash(salt: String, password: String) -> String {
+    fn hash(salt: &Salt, password: String) -> Result<Hash, Box<dyn std::error::Error>> {
         let mut hash = [0; 24];
 
         bcrypt::bcrypt(
             12, // 12 is the work factor recommended by OWASP.
-            &salt.into_bytes(),
+            &salt.0,
             &password.into_bytes(),
             &mut hash,
         );
 
-        base64::encode(hash)
+        Ok(Hash::try_from(base64::encode(hash))?)
     }
 }
