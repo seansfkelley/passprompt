@@ -1,4 +1,5 @@
 use crypto::bcrypt;
+use regex::{Match, Regex};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::convert::{From, TryFrom};
@@ -12,10 +13,84 @@ use crate::util;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Config {
-    pub frequency: Option<String>,
-    pub hash: Option<String>,
-    #[serde(default = "HashMap::new")]
+    #[serde(default)]
+    pub minimum_wait: MinimumWait,
+    #[serde(default)]
+    pub retries: usize,
+    #[serde(default)]
     pub passwords: HashMap<String, PasswordEntry>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(try_from = "String")]
+#[serde(into = "String")]
+pub struct MinimumWait {
+    days: usize,
+    hours: usize,
+    minutes: usize,
+}
+
+impl MinimumWait {
+    fn parse_maybe_int(s: Option<Match>) -> usize {
+        s.map(|t| t.as_str().parse().unwrap()).unwrap_or(0)
+    }
+}
+
+impl Default for MinimumWait {
+    fn default() -> MinimumWait {
+        MinimumWait {
+            days: 0,
+            hours: 4,
+            minutes: 0,
+        }
+    }
+}
+
+impl TryFrom<String> for MinimumWait {
+    type Error = Box<dyn std::error::Error>;
+
+    fn try_from(s: String) -> Result<Self, Self::Error> {
+        let parts = Regex::new(r"^\s*((?P<d>\d+)d)?\s*((?P<h>\d+)h)?\s*((?P<m>\d+)m)?\s*\s*$")
+            .unwrap()
+            .captures(s.as_str());
+        match parts {
+            Some(captures) => Ok(MinimumWait {
+                days: MinimumWait::parse_maybe_int(captures.name("d")),
+                hours: MinimumWait::parse_maybe_int(captures.name("h")),
+                minutes: MinimumWait::parse_maybe_int(captures.name("m")),
+            }),
+            None => panic!("todo"),
+        }
+    }
+}
+
+impl From<MinimumWait> for String {
+    fn from(w: MinimumWait) -> Self {
+        let mut s = String::new();
+        if w.days > 0 {
+            s += format!("{}d", w.days).as_str();
+        }
+        if w.hours > 0 {
+            if s.len() > 0 {
+                s += " ";
+            }
+            s += format!("{}h", w.hours).as_str();
+        }
+        if w.minutes > 0 {
+            if s.len() > 0 {
+                s += " ";
+            }
+            s += format!("{}m", w.minutes).as_str();
+        }
+        s
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct PasswordEntry {
+    pub salt: Salt,
+    pub hash: Hash,
+    pub last_asked: Option<u64>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -58,17 +133,11 @@ impl From<Hash> for String {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct PasswordEntry {
-    pub salt: Salt,
-    pub hash: Hash,
-}
-
 impl Config {
     pub fn load(p: &PathBuf) -> Result<Config, Box<dyn Error>> {
         let mut config_content = String::new();
 
-        let file = OpenOptions::new()
+        OpenOptions::new()
             .read(true)
             .write(true)
             .create(true)
@@ -101,7 +170,11 @@ impl PasswordEntry {
     ) -> Result<PasswordEntry, Box<dyn std::error::Error>> {
         let salt = Salt::try_from(salt)?;
         let hash = PasswordEntry::hash(&salt, password)?;
-        Ok(PasswordEntry { salt, hash })
+        Ok(PasswordEntry {
+            salt,
+            hash,
+            last_asked: None,
+        })
     }
 
     pub fn matches(&self, password: String) -> bool {

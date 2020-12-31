@@ -5,6 +5,7 @@ use xdg::BaseDirectories;
 
 mod commands;
 mod config;
+mod error;
 mod util;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -42,24 +43,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let xdg_dirs = BaseDirectories::with_prefix("passprompt").unwrap();
     let config_path = xdg_dirs.place_config_file("config.toml")?;
     let mut config = config::Config::load(&config_path)?;
+    let mut did_update = false;
 
     if let Some(_) = matches.subcommand_matches("list") {
         commands::list(&config)?;
     } else if let Some(matches) = matches.subcommand_matches("add") {
-        let did_update = commands::add(
+        did_update = commands::add(
             &mut config,
             commands::AddArgs {
                 name: matches.value_of("name").map(|n| n.to_string()),
                 salt: matches.value_of("salt").map(|s| s.to_string()),
             },
         )?;
-        if did_update {
-            config.store(&config_path)?;
-        }
-    } else if let Some(matches) = matches.subcommand_matches("ask") {
-        commands::ask(&config)?;
+    } else if let Some(_) = matches.subcommand_matches("ask") {
+        did_update = commands::ask(&mut config)?;
     } else {
         println!("{}", matches.usage());
+    }
+
+    if did_update {
+        config.store(&config_path)?;
     }
 
     Ok(())
