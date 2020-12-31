@@ -22,8 +22,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .about("Add a new password entry")
                 .arg(
                     Arg::with_name("name")
-                        .long("name")
-                        .short("n")
+                        .value_name("NAME")
                         .takes_value(true)
                         .help("Name for the new password"),
                 )
@@ -33,6 +32,24 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         .short("s")
                         .takes_value(true)
                         .help("16-byte salt to use for hashing, encoded in base64"),
+                ),
+        )
+        .subcommand(
+            SubCommand::with_name("remove")
+                .alias("rm")
+                .about("Remove one or more password entries")
+                .arg(
+                    Arg::with_name("password")
+                        .value_name("PASSWORD")
+                        .takes_value(true)
+                        .multiple(true)
+                        .help("Name of the password to remove"),
+                )
+                .arg(
+                    Arg::with_name("all")
+                        .long("all")
+                        .short("a")
+                        .help("Remove all password entries"),
                 ),
         )
         .subcommand(
@@ -60,6 +77,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             commands::AddArgs {
                 name: matches.value_of("name").map(|n| n.to_string()),
                 salt: matches.value_of("salt").map(|s| s.to_string()),
+            },
+        )?;
+    } else if let Some(matches) = matches.subcommand_matches("remove") {
+        did_update = commands::remove(
+            &mut config,
+            commands::RemoveArgs {
+                all: matches.is_present("all"),
+                entries: matches
+                    .values_of("password")
+                    .map(|v| v.into_iter().collect())
+                    .unwrap_or(vec![]),
             },
         )?;
     } else if let Some(matches) = matches.subcommand_matches("ask") {
