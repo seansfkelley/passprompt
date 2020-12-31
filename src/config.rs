@@ -7,6 +7,7 @@ use std::error::Error;
 use std::fs::{write, OpenOptions};
 use std::io::Read;
 use std::path::PathBuf;
+use std::time::SystemTime;
 use toml;
 
 use crate::util;
@@ -25,14 +26,23 @@ pub struct Config {
 #[serde(try_from = "String")]
 #[serde(into = "String")]
 pub struct MinimumWait {
-    days: usize,
-    hours: usize,
-    minutes: usize,
+    days: u64,
+    hours: u64,
+    minutes: u64,
 }
 
 impl MinimumWait {
-    fn parse_maybe_int(s: Option<Match>) -> usize {
+    fn parse_maybe_int(s: Option<Match>) -> u64 {
         s.map(|t| t.as_str().parse().unwrap()).unwrap_or(0)
+    }
+
+    pub fn to_millis(&self) -> u64 {
+        let current_time = SystemTime::now()
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .unwrap()
+            .as_millis() as u64;
+        let ago = ((self.days * 24 + self.hours) * 60 + self.minutes) * 60 * 1000;
+        current_time - ago
     }
 }
 

@@ -7,11 +7,28 @@ use std::time::SystemTime;
 use crate::config;
 use crate::error::PasspromptError;
 
-pub fn command(config: &mut config::Config) -> Result<bool, Box<dyn std::error::Error>> {
+pub struct Args {
+  pub always: bool,
+}
+
+pub fn command(
+  config: &mut config::Config,
+  args: Args,
+) -> Result<bool, Box<dyn std::error::Error>> {
   let mut entries = Vec::from_iter(config.passwords.iter_mut());
 
-  if entries.len() == 0 {
+  if !args.always {
+    let since = config.minimum_wait.to_millis();
+    entries = entries
+      .into_iter()
+      .filter(|e| e.1.last_asked.unwrap_or(0) < since)
+      .collect();
+  } else if entries.len() == 0 {
     return Err(Box::new(PasspromptError::NoPasswordsDefined));
+  }
+
+  if entries.len() == 0 {
+    return Ok(false);
   }
 
   let entry = entries.choose_mut(&mut thread_rng()).unwrap();

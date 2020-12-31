@@ -36,7 +36,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 ),
         )
         .subcommand(
-            SubCommand::with_name("ask").about("Prompt for a random password from the list"),
+            SubCommand::with_name("ask")
+                .about("Prompt for a random password from the list")
+                .arg(
+                    Arg::with_name("always")
+                        .long("always")
+                        .short("a")
+                        .help("Always ask, even if all passwords were asked recently"),
+                ),
         )
         .get_matches();
 
@@ -55,8 +62,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 salt: matches.value_of("salt").map(|s| s.to_string()),
             },
         )?;
-    } else if let Some(_) = matches.subcommand_matches("ask") {
-        did_update = commands::ask(&mut config)?;
+    } else if let Some(matches) = matches.subcommand_matches("ask") {
+        did_update = commands::ask(
+            &mut config,
+            commands::AskArgs {
+                always: matches.is_present("always"),
+            },
+        )?;
     } else {
         println!("{}", matches.usage());
     }
