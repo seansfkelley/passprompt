@@ -75,10 +75,11 @@ impl Config {
             .open(&p)?
             .read_to_string(&mut config_content)?;
 
-        if let Ok(c) = toml::from_str::<Config>(&config_content.to_string()) {
-            Ok(c)
-        } else {
-            panic!("todo");
+        match toml::from_str::<Config>(&config_content.to_string()) {
+            Ok(c) => Ok(c),
+            // TODO: Literally no idea why Box::new works here, but using map_err on the Result
+            // directly causes it to complain about struct/trait object mismatch.
+            Err(e) => Err(Box::new(e)),
         }
     }
 
@@ -86,7 +87,7 @@ impl Config {
         if let Ok(foo) = toml::to_string_pretty(&self) {
             write(p, foo)
         } else {
-            panic!("todo");
+            panic!("nah");
         }
     }
 }
