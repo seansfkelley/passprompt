@@ -18,7 +18,7 @@ pub fn command(
   let mut entries = Vec::from_iter(config.passwords.iter_mut());
 
   if !args.always {
-    let since = config.minimum_wait.to_millis();
+    let since = config.wait.unwrap_or_default().to_millis();
     entries = entries
       .into_iter()
       .filter(|e| e.1.last_asked.unwrap_or(0) < since)
@@ -33,7 +33,7 @@ pub fn command(
 
   let entry = entries.choose_mut(&mut thread_rng()).unwrap();
 
-  let mut tries = config.retries + 1;
+  let mut tries = config.retries.unwrap_or_default() + 1;
   let mut success = false;
 
   while tries > 0 {

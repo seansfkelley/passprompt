@@ -57,6 +57,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         )
         .get_matches();
 
+    // TODO
+    // - add config command for setting arguments
+    // - hoist last_asked to root so it covers all passwords
+    // - add skip/unskip commands?
+
+    // TODO: Is the xdg library necessary?
     let xdg_dirs = BaseDirectories::with_prefix("passprompt").unwrap();
     let config_path = xdg_dirs.place_config_file("config.toml")?;
     let mut config = config::Config::load(&config_path)?;

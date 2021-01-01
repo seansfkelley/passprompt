@@ -32,11 +32,11 @@ Interactively add a new password to prompt for.
 
 #### `passprompt list`
 
-List the names of passwords currently known to passprompt.
+List the names of passwords known to passprompt.
 
 #### `passprompt remove`
 
-Remove one or more passwords known by passprompt.
+Remove one or more passwords known to passprompt.
 
 #### `passprompt ask`
 

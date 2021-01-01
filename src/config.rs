@@ -14,24 +14,22 @@ use crate::util;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Config {
-    #[serde(default)]
-    pub minimum_wait: MinimumWait,
-    #[serde(default)]
-    pub retries: usize,
+    pub wait: Option<Wait>,
+    pub retries: Option<usize>,
     #[serde(default)]
     pub passwords: HashMap<String, PasswordEntry>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 #[serde(try_from = "String")]
 #[serde(into = "String")]
-pub struct MinimumWait {
+pub struct Wait {
     days: u64,
     hours: u64,
     minutes: u64,
 }
 
-impl MinimumWait {
+impl Wait {
     fn parse_maybe_int(s: Option<Match>) -> u64 {
         s.map(|t| t.as_str().parse().unwrap()).unwrap_or(0)
     }
@@ -46,17 +44,17 @@ impl MinimumWait {
     }
 }
 
-impl Default for MinimumWait {
-    fn default() -> MinimumWait {
-        MinimumWait {
+impl Default for Wait {
+    fn default() -> Wait {
+        Wait {
             days: 0,
-            hours: 4,
+            hours: 0,
             minutes: 0,
         }
     }
 }
 
-impl TryFrom<String> for MinimumWait {
+impl TryFrom<String> for Wait {
     type Error = Box<dyn std::error::Error>;
 
     fn try_from(s: String) -> Result<Self, Self::Error> {
@@ -64,18 +62,18 @@ impl TryFrom<String> for MinimumWait {
             .unwrap()
             .captures(s.as_str());
         match parts {
-            Some(captures) => Ok(MinimumWait {
-                days: MinimumWait::parse_maybe_int(captures.name("d")),
-                hours: MinimumWait::parse_maybe_int(captures.name("h")),
-                minutes: MinimumWait::parse_maybe_int(captures.name("m")),
+            Some(captures) => Ok(Wait {
+                days: Wait::parse_maybe_int(captures.name("d")),
+                hours: Wait::parse_maybe_int(captures.name("h")),
+                minutes: Wait::parse_maybe_int(captures.name("m")),
             }),
             None => panic!("todo"),
         }
     }
 }
 
-impl From<MinimumWait> for String {
-    fn from(w: MinimumWait) -> Self {
+impl From<Wait> for String {
+    fn from(w: Wait) -> Self {
         let mut s = String::new();
         if w.days > 0 {
             s += format!("{}d", w.days).as_str();
