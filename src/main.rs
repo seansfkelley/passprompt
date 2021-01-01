@@ -52,14 +52,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     Arg::with_name("always")
                         .long("always")
                         .short("a")
-                        .help("Always ask, even if all passwords were asked recently"),
+                        .help("Always ask, even if the configured wait time hasn't elapsed"),
                 ),
         )
         .get_matches();
 
     // TODO
     // - add config command for setting arguments
-    // - hoist last_asked to root so it covers all passwords
     // - add skip/unskip commands?
 
     // TODO: Is the xdg library necessary?

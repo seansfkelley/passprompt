@@ -7,7 +7,6 @@ use std::error::Error;
 use std::fs::{write, OpenOptions};
 use std::io::Read;
 use std::path::PathBuf;
-use std::time::SystemTime;
 use toml;
 
 use crate::error::PasspromptError;
@@ -17,6 +16,7 @@ use crate::util;
 pub struct Config {
     pub wait: Option<Wait>,
     pub retries: Option<usize>,
+    pub last_asked: Option<u64>,
     #[serde(default)]
     pub passwords: HashMap<String, PasswordEntry>,
 }
@@ -35,13 +35,8 @@ impl Wait {
         s.map(|t| t.as_str().parse().unwrap()).unwrap_or(0)
     }
 
-    pub fn to_millis(&self) -> u64 {
-        let current_time = SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
-            .unwrap()
-            .as_millis() as u64;
-        let ago = ((self.days * 24 + self.hours) * 60 + self.minutes) * 60 * 1000;
-        current_time - ago
+    pub fn as_secs(&self) -> u64 {
+        ((self.days * 24 + self.hours) * 60 + self.minutes) * 60
     }
 }
 
@@ -59,7 +54,7 @@ impl TryFrom<String> for Wait {
     type Error = Box<dyn std::error::Error>;
 
     fn try_from(s: String) -> Result<Self, Self::Error> {
-        let parts = Regex::new(r"^\s*((?P<d>\d+)d)?\s*((?P<h>\d+)h)?\s*((?P<m>\d+)m)?\s*\s*$")
+        let parts = Regex::new(r"^\s*((?P<d>\d+)d)?\s*((?P<h>\d+)h)?\s*((?P<m>\d+)m)?\s*$")
             .unwrap()
             .captures(s.as_str());
         match parts {
@@ -99,7 +94,6 @@ impl From<Wait> for String {
 pub struct PasswordEntry {
     pub salt: Salt,
     pub hash: Hash,
-    pub last_asked: Option<u64>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -179,11 +173,7 @@ impl PasswordEntry {
     ) -> Result<PasswordEntry, Box<dyn std::error::Error>> {
         let salt = Salt::try_from(salt)?;
         let hash = PasswordEntry::hash(&salt, password)?;
-        Ok(PasswordEntry {
-            salt,
-            hash,
-            last_asked: None,
-        })
+        Ok(PasswordEntry { salt, hash })
     }
 
     pub fn matches(&self, password: String) -> bool {
