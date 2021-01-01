@@ -13,9 +13,14 @@ cargo +nightly build --release
 
 ## usage
 
-passprompt stores salted hashes of your passwords in a config file. Run `passprompt ask` to pick one at random for you to enter.
+passprompt is intended to be used as part of your everyday process, such as in your shell's .rc file.
 
-Passwords are never echoed to the terminal and are stored hashed with Bcrypt and unique salts per-password.
+```sh
+# .bashrc or whatever
+passprompt ask
+```
+
+Set up like this, every time you open a new shell you might be asked to enter one of your configured passwords. See the configuration section, below, to set up the nagging to your preference.
 
 ### commands
 
@@ -39,9 +44,7 @@ Interactively prompt for a password at random.
 
 ### configuration
 
-passprompt stores configuration in your XDG-configured directory, by default, `~/.config/passprompt`.
-
-A `config.toml` file there accepts the keys outlined in the rest of this section.
+passprompt stores configuration and state in `$XDG_CONFIG_HOME/passprompt/config.toml`. If `XDG_CONFIG_HOME` is unset, it defaults to `~/.config`. The file accepts the configuration outlined in the remainder of this section.
 
 #### `retries`
 
@@ -52,3 +55,9 @@ Nonnegative integer. How many times to prompt again while incorrect passwords ar
 Duration string. How long must elapse between prompting for the same password twice.
 
 Format: `${x}d ${y}h ${z}m` representing `x` (d)ays, `y` (h)ours and `z` (m)inutes. All three clauses are optional.
+
+## security
+
+Passwords are never echoed to the terminal and are stored in the configuration file named above, hashed with Bcrypt and unique salts per-password.
+
+passprompt never communicates on the network.
