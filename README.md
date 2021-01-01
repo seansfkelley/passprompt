@@ -35,7 +35,7 @@ The `ask` commmand only uses stderr, so it should not leak output into the promp
 
 Commands accept a `--help` flag to explain their flags.
 
-#### `passprompt add`
+#### `passprompt add [password name]`
 
 Interactively add a new password to prompt for.
 
@@ -43,7 +43,7 @@ Interactively add a new password to prompt for.
 
 List the names of passwords known to passprompt.
 
-#### `passprompt remove`
+#### `passprompt remove [password name]`
 
 Remove one or more passwords known to passprompt.
 
@@ -51,7 +51,7 @@ Remove one or more passwords known to passprompt.
 
 Interactively prompt for a password at random.
 
-#### `passprompt config`
+#### `passprompt config [config name]`
 
 Set or get a configuration value for passprompt. Used without a second argument, the named config value is retrieved. When the second argument is provided, it's used to set the config value.
 
