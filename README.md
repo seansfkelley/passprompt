@@ -42,6 +42,10 @@ Remove one or more passwords known to passprompt.
 
 Interactively prompt for a password at random.
 
+#### `passprompt set`
+
+Set a configuration value for passprompt. See the section below for legal configuration options.
+
 ### configuration
 
 passprompt stores configuration and state in `$XDG_CONFIG_HOME/passprompt/config.toml`. If `XDG_CONFIG_HOME` is unset, it defaults to `~/.config`. The file accepts the configuration outlined in the remainder of this section.
@@ -50,7 +54,7 @@ passprompt stores configuration and state in `$XDG_CONFIG_HOME/passprompt/config
 
 Nonnegative integer. How many times to prompt again while incorrect passwords are entered when using `ask`.
 
-#### `minimum_wait`
+#### `wait`
 
 Duration string. How long must elapse between prompting for the same password twice.
 

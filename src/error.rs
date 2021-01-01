@@ -6,6 +6,7 @@ pub enum PasspromptError {
   NoPasswordsDefined,
   IllegalByteArrayLength { expected: usize, actual: usize },
   UnparseableWaitFormat(String),
+  UnknownConfigOption(String),
 }
 
 impl fmt::Display for PasspromptError {
@@ -19,6 +20,9 @@ impl fmt::Display for PasspromptError {
       }
       Self::UnparseableWaitFormat(s) => {
         write!(f, "could not parse wait format '{}'", s)
+      }
+      Self::UnknownConfigOption(o) => {
+        write!(f, "unknown configuration option '{}'", o)
       }
     }
   }

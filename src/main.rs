@@ -23,7 +23,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .arg(
                     Arg::with_name("name")
                         .value_name("NAME")
-                        .takes_value(true)
                         .help("Name for the new password"),
                 ),
         )
@@ -34,7 +33,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .arg(
                     Arg::with_name("password")
                         .value_name("PASSWORD")
-                        .takes_value(true)
                         .multiple(true)
                         .help("Name of the password to remove"),
                 )
@@ -55,11 +53,23 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         .help("Always ask, even if the configured wait time hasn't elapsed"),
                 ),
         )
+        .subcommand(
+            SubCommand::with_name("set")
+                .about("Set a configuration value (see documentation)")
+                .arg(
+                    Arg::with_name("key")
+                        .value_name("KEY")
+                        .required(true)
+                        .help("Name of the configuration option to set"),
+                )
+                .arg(
+                    Arg::with_name("value")
+                        .value_name("VALUE")
+                        .required(true)
+                        .help("Value to assign the configuration option"),
+                ),
+        )
         .get_matches();
-
-    // TODO
-    // - add config command for setting arguments
-    // - add skip/unskip commands?
 
     // TODO: Is the xdg library necessary?
     let xdg_dirs = BaseDirectories::with_prefix("passprompt").unwrap();
@@ -68,8 +78,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let should_update = {
         if let Some(_) = matches.subcommand_matches("list") {
-            commands::list(&config)?;
-            false
+            commands::list(&config)?
+        } else if let Some(matches) = matches.subcommand_matches("set") {
+            commands::set(
+                &mut config,
+                commands::SetArgs {
+                    key: matches.value_of("key").unwrap().to_string(),
+                    value: matches.value_of("value").unwrap().to_string(),
+                },
+            )?
         } else if let Some(matches) = matches.subcommand_matches("add") {
             commands::add(
                 &mut config,
