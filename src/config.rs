@@ -10,6 +10,7 @@ use std::path::PathBuf;
 use std::time::SystemTime;
 use toml;
 
+use crate::error::PasspromptError;
 use crate::util;
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -67,7 +68,7 @@ impl TryFrom<String> for Wait {
                 hours: Wait::parse_maybe_int(captures.name("h")),
                 minutes: Wait::parse_maybe_int(captures.name("m")),
             }),
-            None => panic!("todo"),
+            None => Err(Box::new(PasspromptError::UnparseableWaitFormat(s))),
         }
     }
 }

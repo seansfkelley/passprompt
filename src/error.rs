@@ -5,6 +5,7 @@ use std::fmt;
 pub enum PasspromptError {
   NoPasswordsDefined,
   ImproperSaltLength(usize, usize),
+  UnparseableWaitFormat(String),
 }
 
 impl fmt::Display for PasspromptError {
@@ -15,6 +16,9 @@ impl fmt::Display for PasspromptError {
       }
       Self::NoPasswordsDefined => {
         write!(f, "no passwords defined")
+      }
+      Self::UnparseableWaitFormat(s) => {
+        write!(f, "could not parse wait format '{}'", s)
       }
     }
   }
