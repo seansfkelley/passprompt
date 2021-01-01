@@ -19,25 +19,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         )
         .subcommand(
             SubCommand::with_name("add")
-                .about("Add a new password entry")
+                .about("Add a new password")
                 .arg(
                     Arg::with_name("name")
                         .value_name("NAME")
                         .takes_value(true)
                         .help("Name for the new password"),
-                )
-                .arg(
-                    Arg::with_name("salt")
-                        .long("salt")
-                        .short("s")
-                        .takes_value(true)
-                        .help("16-byte salt to use for hashing, encoded in base64"),
                 ),
         )
         .subcommand(
             SubCommand::with_name("remove")
                 .alias("rm")
-                .about("Remove one or more password entries")
+                .about("Remove one or more passwords")
                 .arg(
                     Arg::with_name("password")
                         .value_name("PASSWORD")
@@ -49,7 +42,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     Arg::with_name("all")
                         .long("all")
                         .short("a")
-                        .help("Remove all password entries"),
+                        .help("Remove all passwords"),
                 ),
         )
         .subcommand(
@@ -67,41 +60,43 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let xdg_dirs = BaseDirectories::with_prefix("passprompt").unwrap();
     let config_path = xdg_dirs.place_config_file("config.toml")?;
     let mut config = config::Config::load(&config_path)?;
-    let mut did_update = false;
 
-    if let Some(_) = matches.subcommand_matches("list") {
-        commands::list(&config)?;
-    } else if let Some(matches) = matches.subcommand_matches("add") {
-        did_update = commands::add(
-            &mut config,
-            commands::AddArgs {
-                name: matches.value_of("name").map(|n| n.to_string()),
-                salt: matches.value_of("salt").map(|s| s.to_string()),
-            },
-        )?;
-    } else if let Some(matches) = matches.subcommand_matches("remove") {
-        did_update = commands::remove(
-            &mut config,
-            commands::RemoveArgs {
-                all: matches.is_present("all"),
-                entries: matches
-                    .values_of("password")
-                    .map(|v| v.into_iter().collect())
-                    .unwrap_or(vec![]),
-            },
-        )?;
-    } else if let Some(matches) = matches.subcommand_matches("ask") {
-        did_update = commands::ask(
-            &mut config,
-            commands::AskArgs {
-                always: matches.is_present("always"),
-            },
-        )?;
-    } else {
-        println!("{}", matches.usage());
-    }
+    let should_update = {
+        if let Some(_) = matches.subcommand_matches("list") {
+            commands::list(&config)?;
+            false
+        } else if let Some(matches) = matches.subcommand_matches("add") {
+            commands::add(
+                &mut config,
+                commands::AddArgs {
+                    name: matches.value_of("name").map(|n| n.to_string()),
+                },
+            )?
+        } else if let Some(matches) = matches.subcommand_matches("remove") {
+            commands::remove(
+                &mut config,
+                commands::RemoveArgs {
+                    all: matches.is_present("all"),
+                    entries: matches
+                        .values_of("password")
+                        .map(|v| v.into_iter().collect())
+                        .unwrap_or(vec![]),
+                },
+            )?
+        } else if let Some(matches) = matches.subcommand_matches("ask") {
+            commands::ask(
+                &mut config,
+                commands::AskArgs {
+                    always: matches.is_present("always"),
+                },
+            )?
+        } else {
+            println!("{}", matches.usage());
+            false
+        }
+    };
 
-    if did_update {
+    if should_update {
         config.store(&config_path)?;
     }
 

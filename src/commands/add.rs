@@ -8,7 +8,6 @@ use crate::config;
 
 pub struct Args {
   pub name: Option<String>,
-  pub salt: Option<String>,
 }
 
 pub fn command(
@@ -26,7 +25,7 @@ pub fn command(
   if config.passwords.contains_key(&name) {
     let response = prompt_reply_stdout(
       format!(
-        "there is already a password named '{}', overwrite (y/n)? ",
+        "there is already a password named '{}', overwrite (y/N)? ",
         name
       )
       .as_str(),
@@ -37,14 +36,9 @@ pub fn command(
   }
 
   let salt = {
-    if let Some(salt) = args.salt {
-      base64::decode(&salt)?;
-      salt
-    } else {
-      let mut salt = [0; 16];
-      rand::thread_rng().fill_bytes(&mut salt);
-      base64::encode(salt)
-    }
+    let mut salt_bytes = [0; 16];
+    rand::thread_rng().fill_bytes(&mut salt_bytes);
+    base64::encode(salt_bytes)
   };
 
   let password = prompt_password_stdout("password: ")?;
