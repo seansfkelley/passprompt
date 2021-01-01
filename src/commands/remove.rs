@@ -1,3 +1,4 @@
+use crate::commands::CommandResult;
 use crate::config;
 
 pub struct Args<'a> {
@@ -8,7 +9,7 @@ pub struct Args<'a> {
 pub fn command(
   config: &mut config::Config,
   args: Args,
-) -> Result<bool, Box<dyn std::error::Error>> {
+) -> Result<CommandResult, Box<dyn std::error::Error>> {
   if args.all {
     config.passwords = Default::default();
   } else {
@@ -17,5 +18,8 @@ pub fn command(
     }
   }
 
-  Ok(true)
+  Ok(CommandResult {
+    should_save: true,
+    success: true,
+  })
 }

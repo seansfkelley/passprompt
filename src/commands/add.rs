@@ -1,9 +1,10 @@
 use base64;
 
 use rand::prelude::*;
-use rpassword::prompt_password_stdout;
-use rprompt::prompt_reply_stdout;
+use rpassword::prompt_password_stderr;
+use rprompt::prompt_reply_stderr;
 
+use crate::commands::CommandResult;
 use crate::config;
 
 pub struct Args {
@@ -13,17 +14,17 @@ pub struct Args {
 pub fn command(
   config: &mut config::Config,
   args: Args,
-) -> Result<bool, Box<dyn std::error::Error>> {
+) -> Result<CommandResult, Box<dyn std::error::Error>> {
   let name = {
     if let Some(name) = args.name {
       name
     } else {
-      prompt_reply_stdout("name: ")?
+      prompt_reply_stderr("name: ")?
     }
   };
 
   if config.passwords.contains_key(&name) {
-    let response = prompt_reply_stdout(
+    let response = prompt_reply_stderr(
       format!(
         "there is already a password named '{}', overwrite (y/N)? ",
         name
@@ -31,7 +32,10 @@ pub fn command(
       .as_str(),
     )?;
     if response != "y" && response != "Y" {
-      return Ok(false);
+      return Ok(CommandResult {
+        should_save: false,
+        success: true,
+      });
     }
   }
 
@@ -41,11 +45,14 @@ pub fn command(
     base64::encode(salt_bytes)
   };
 
-  let password = prompt_password_stdout("password: ")?;
+  let password = prompt_password_stderr("password: ")?;
 
   config
     .passwords
     .insert(name, config::PasswordEntry::create(salt, password)?);
 
-  Ok(true)
+  Ok(CommandResult {
+    should_save: true,
+    success: true,
+  })
 }

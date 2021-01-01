@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::convert::{From, TryFrom};
 use std::error::Error;
+use std::fmt;
 use std::fs::{write, OpenOptions};
 use std::io::Read;
 use std::path::PathBuf;
@@ -47,6 +48,12 @@ impl Default for Wait {
             hours: 0,
             minutes: 0,
         }
+    }
+}
+
+impl fmt::Display for Wait {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", String::from(*self))
     }
 }
 

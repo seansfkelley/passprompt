@@ -54,8 +54,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 ),
         )
         .subcommand(
-            SubCommand::with_name("set")
-                .about("Set a configuration value (see documentation)")
+            SubCommand::with_name("config")
+                .about("Sets or gets a configuration value (see documentation)")
                 .arg(
                     Arg::with_name("key")
                         .value_name("KEY")
@@ -65,7 +65,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .arg(
                     Arg::with_name("value")
                         .value_name("VALUE")
-                        .required(true)
                         .help("Value to assign the configuration option"),
                 ),
         )
@@ -76,15 +75,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config_path = xdg_dirs.place_config_file("config.toml")?;
     let mut config = config::Config::load(&config_path)?;
 
-    let should_update = {
+    let result = {
         if let Some(_) = matches.subcommand_matches("list") {
             commands::list(&config)?
-        } else if let Some(matches) = matches.subcommand_matches("set") {
-            commands::set(
+        } else if let Some(matches) = matches.subcommand_matches("config") {
+            commands::config(
                 &mut config,
-                commands::SetArgs {
+                commands::ConfigArgs {
                     key: matches.value_of("key").unwrap().to_string(),
-                    value: matches.value_of("value").unwrap().to_string(),
+                    value: matches.value_of("value").map(|v| v.to_string()),
                 },
             )?
         } else if let Some(matches) = matches.subcommand_matches("add") {
@@ -113,14 +112,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 },
             )?
         } else {
-            println!("{}", matches.usage());
-            false
+            eprintln!("{}", matches.usage());
+            commands::CommandResult {
+                should_save: false,
+                success: true,
+            }
         }
     };
 
-    if should_update {
+    if result.should_save {
         config.store(&config_path)?;
     }
 
-    Ok(())
+    if !result.success {
+        std::process::exit(1);
+    } else {
+        Ok(())
+    }
 }

@@ -1,9 +1,10 @@
 use rand::seq::SliceRandom;
 use rand::thread_rng;
-use rpassword::prompt_password_stdout;
+use rpassword::prompt_password_stderr;
 use std::iter::FromIterator;
 use std::time::SystemTime;
 
+use crate::commands::CommandResult;
 use crate::config;
 use crate::error::PasspromptError;
 
@@ -14,7 +15,7 @@ pub struct Args {
 pub fn command(
   config: &mut config::Config,
   args: Args,
-) -> Result<bool, Box<dyn std::error::Error>> {
+) -> Result<CommandResult, Box<dyn std::error::Error>> {
   if config.passwords.len() == 0 {
     return Err(Box::new(PasspromptError::NoPasswordsDefined));
   }
@@ -39,7 +40,10 @@ pub fn command(
   };
 
   if !should_ask {
-    return Ok(false);
+    return Ok(CommandResult {
+      should_save: false,
+      success: true,
+    });
   }
 
   let entries = Vec::from_iter(config.passwords.iter_mut());
@@ -50,7 +54,7 @@ pub fn command(
 
   while tries > 0 {
     let input =
-      prompt_password_stdout(format!("[passprompt] password for {}: ", entry.0).as_str())?;
+      prompt_password_stderr(format!("[passprompt] password for {}: ", entry.0).as_str())?;
 
     if input.len() > 0 && entry.1.matches(input) {
       success = true;
@@ -61,12 +65,15 @@ pub fn command(
   }
 
   if success {
-    println!("got it!");
+    eprintln!("got it!");
   } else {
-    println!("better luck next time...");
+    eprintln!("better luck next time...");
   }
 
   config.last_asked = Some(now);
 
-  Ok(true)
+  Ok(CommandResult {
+    should_save: true,
+    success,
+  })
 }

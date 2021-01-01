@@ -13,14 +13,23 @@ cargo +nightly build --release
 
 ## usage
 
-passprompt is intended to be used as part of your everyday process, such as in your shell's .rc file.
+passprompt is intended to be used as part of your everyday process. See the configuration section, below, to set up the nagging schedule to your preference.
+
+As an example, you might want to prompt on new shell sessions, so you could put it in your .rc file:
 
 ```sh
-# .bashrc or whatever
+# put this in .bashrc (or equivalent) to prompt on every new terminal session
 passprompt ask
 ```
 
-Set up like this, every time you open a new shell you might be asked to enter one of your configured passwords. See the configuration section, below, to set up the nagging to your preference.
+Alternately, if you're the type to have long-lived shell sessions, you could prompt on new shell prompts:
+
+```sh
+# wherever you configure your shell prompt
+PROMPT='$(passprompt ask) $'
+```
+
+The `ask` commmand only uses stderr, so it should not leak output into the prompt itself. Note, however, that it will exit nonzero if you fail the prompt, which could change the behavior of `PROMPT` depending on exactly how you've set it up.
 
 ### commands
 
@@ -42,9 +51,11 @@ Remove one or more passwords known to passprompt.
 
 Interactively prompt for a password at random.
 
-#### `passprompt set`
+#### `passprompt config`
 
-Set a configuration value for passprompt. See the section below for legal configuration options.
+Set or get a configuration value for passprompt. Used without a second argument, the named config value is retrieved. When the second argument is provided, it's used to set the config value.
+
+See the section below for legal configuration options.
 
 ### configuration
 
