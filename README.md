@@ -1,6 +1,6 @@
 # passprompt
 
-A little utility to nag you to remember your passwords.
+> Nag yourself to remember your passwords.
 
 ## installation
 

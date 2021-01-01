@@ -11,7 +11,7 @@ mod util;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let matches = App::new("passprompt")
         .version(crate_version!())
-        .about("Occasionally prompt for passwords as a memorization aid.")
+        .about("Nag yourself to remember your passwords.")
         .subcommand(
             SubCommand::with_name("list")
                 .alias("ls")
