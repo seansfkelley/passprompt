@@ -69,7 +69,7 @@ Nonnegative integer. How many times to prompt again while incorrect passwords ar
 
 Duration string. How long must elapse between prompting for the same password twice.
 
-Format: `${x}d ${y}h ${z}m` representing `x` (d)ays, `y` (h)ours and `z` (m)inutes. All three clauses are optional, but must be in that order if present.
+Format: `xd yh zm` representing `x` (d)ays, `y` (h)ours and `z` (m)inutes. All three clauses are optional, but must be in that order if present.
 
 ## security
 
