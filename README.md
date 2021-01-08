@@ -26,7 +26,7 @@ Alternately, if you're the type to have long-lived shell sessions, you could pro
 
 ```sh
 # wherever you configure your shell prompt
-PROMPT='$(passprompt ask) $'
+PROMPT='$(passprompt ask)$'
 ```
 
 The `ask` commmand only uses stderr, so it should not leak output into the prompt itself. Note, however, that it will exit nonzero if you fail the prompt, which could change the behavior of `PROMPT` depending on exactly how you've set it up.
@@ -39,17 +39,19 @@ Commands accept a `--help` flag to explain their flags.
 
 Interactively add a new password to prompt for.
 
+Please note that interaction is mandatory, as passprompt does not allow for command line arguments or plaintext configuration specifying passwords.
+
 #### `passprompt list`
 
-List the names of passwords known to passprompt.
+List the names of passwords.
 
 #### `passprompt remove [password name]`
 
-Remove one or more passwords known to passprompt.
+Remove one or more passwords.
 
 #### `passprompt ask`
 
-Interactively prompt for a password at random.
+Maybe interactively prompt for a password at random. Will not prompt if `wait` time has not elapsed (see configuration, below), unless `--always` is specified.
 
 #### `passprompt config [config name]`
 
@@ -67,9 +69,11 @@ Nonnegative integer. How many times to prompt again while incorrect passwords ar
 
 #### `wait`
 
-Duration string. How long must elapse between prompting for the same password twice.
+Duration string. How long must elapse between consecutive prompts.
 
-Format: `xd yh zm` representing `x` (d)ays, `y` (h)ours and `z` (m)inutes. All three clauses are optional, but must be in that order if present.
+`ask` will silently do nothing if this duration has not elapsed unless `--always` is specified.
+
+Format: `xd yh zm` representing `x` (d)ays, `y` (h)ours and `z` (m)inutes. All three clauses are optional, but must be in that order if present. If empty or not specified, defaults to zero minutes, that is, `ask` will always prompt.
 
 ## security
 
