@@ -3,7 +3,6 @@ use regex::{Match, Regex};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::convert::{From, TryFrom};
-use std::error::Error;
 use std::fmt;
 use std::fs::{write, OpenOptions};
 use std::io::Read;
@@ -144,7 +143,7 @@ impl From<Hash> for String {
 }
 
 impl Config {
-    pub fn load(p: &PathBuf) -> Result<Config, Box<dyn Error>> {
+    pub fn load(p: &PathBuf) -> Result<Config, Box<dyn std::error::Error>> {
         let mut config_content = String::new();
 
         OpenOptions::new()
@@ -154,22 +153,12 @@ impl Config {
             .open(&p)?
             .read_to_string(&mut config_content)?;
 
-        match toml::from_str::<Config>(&config_content.to_string()) {
-            Ok(c) => Ok(c),
-            // TODO: Literally no idea why Box::new works here, but using map_err on the Result
-            // directly causes it to complain about struct/trait object mismatch.
-            Err(e) => Err(Box::new(e)),
-        }
+        toml::from_str::<Config>(&config_content).map_err(toml::de::Error::into)
     }
 
-    pub fn store(&self, p: &PathBuf) -> Result<(), Box<dyn Error>> {
-        match toml::to_string_pretty(&self) {
-            Ok(contents) => match write(p, contents) {
-                Ok(_) => Ok(()),
-                Err(e) => Err(Box::new(e)),
-            },
-            Err(e) => Err(Box::new(e)),
-        }
+    pub fn store(&self, p: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+        let contents = toml::to_string_pretty(&self)?;
+        write(p, contents).map_err(std::io::Error::into)
     }
 }
 
