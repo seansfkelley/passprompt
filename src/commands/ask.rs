@@ -10,9 +10,10 @@ use crate::error::PasspromptError;
 
 pub struct Args {
   pub always: bool,
+  pub name: Option<String>,
 }
 
-pub fn command(
+pub fn command<'a>(
   config: &mut config::Config,
   args: Args,
 ) -> Result<CommandResult, Box<dyn std::error::Error>> {
@@ -25,38 +26,52 @@ pub fn command(
     .unwrap()
     .as_secs();
 
-  let should_ask = {
-    if args.always {
-      true
-    } else {
-      match config.last_asked {
-        Some(timestamp) => {
-          let wait_seconds = config.wait.unwrap_or_default().as_secs();
-          timestamp + wait_seconds < now
-        }
-        None => true,
+  let (password_name, password_entry) = {
+    if let Some(name) = args.name {
+      let entry = config.passwords.get(&name);
+
+      if entry.is_none() {
+        eprintln!("no password named {}", name);
+        return Ok(CommandResult {
+          should_save: false,
+          success: false,
+        });
       }
+
+      (name, entry.unwrap())
+    } else {
+      if !args.always {
+        match config.last_asked {
+          Some(last_asked) => {
+            let wait_seconds = config.wait.unwrap_or_default().as_secs();
+            if last_asked + wait_seconds >= now {
+              return Ok(CommandResult {
+                should_save: false,
+                success: true,
+              });
+            }
+          }
+          None => (),
+        }
+      }
+
+      let name = (*Vec::from_iter(config.passwords.keys())
+        .choose(&mut thread_rng())
+        .unwrap())
+      .to_string();
+      let entry = config.passwords.get(&name).unwrap();
+      (name, entry)
     }
   };
-
-  if !should_ask {
-    return Ok(CommandResult {
-      should_save: false,
-      success: true,
-    });
-  }
-
-  let entries = Vec::from_iter(config.passwords.iter_mut());
-  let entry = entries.choose(&mut thread_rng()).unwrap();
 
   let mut tries = config.retries.unwrap_or_default() + 1;
   let mut success = false;
 
   while tries > 0 {
     let input =
-      prompt_password_stderr(format!("[passprompt] password for {}: ", entry.0).as_str())?;
+      prompt_password_stderr(format!("[passprompt] password for {}: ", password_name).as_str())?;
 
-    if input.len() > 0 && entry.1.matches(input) {
+    if input.len() > 0 && password_entry.matches(input) {
       success = true;
       break;
     }

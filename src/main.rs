@@ -45,7 +45,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         )
         .subcommand(
             SubCommand::with_name("ask")
-                .about("Prompt for a random password from the list")
+                .about("Prompt for a password by name or at random")
+                .arg(
+                    Arg::with_name("password")
+                        .value_name("PASSWORD")
+                        .help("Name of the password to prompt for (implies --always)"),
+                )
                 .arg(
                     Arg::with_name("always")
                         .long("always")
@@ -83,14 +88,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 &mut config,
                 commands::ConfigArgs {
                     key: matches.value_of("key").unwrap().to_string(),
-                    value: matches.value_of("value").map(|v| v.to_string()),
+                    value: matches.value_of("value").map(str::to_string),
                 },
             )?
         } else if let Some(matches) = matches.subcommand_matches("add") {
             commands::add(
                 &mut config,
                 commands::AddArgs {
-                    name: matches.value_of("name").map(|n| n.to_string()),
+                    name: matches.value_of("name").map(str::to_string),
                 },
             )?
         } else if let Some(matches) = matches.subcommand_matches("remove") {
@@ -109,6 +114,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 &mut config,
                 commands::AskArgs {
                     always: matches.is_present("always"),
+                    name: matches.value_of("password").map(str::to_string),
                 },
             )?
         } else {

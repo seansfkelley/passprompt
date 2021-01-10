@@ -35,7 +35,7 @@ The `ask` commmand only uses stderr, so it should not leak output into the promp
 
 Commands accept a `--help` flag to explain their flags.
 
-#### `passprompt add [password name]`
+#### `passprompt add PASSWORD`
 
 Interactively add a new password to prompt for.
 
@@ -45,15 +45,17 @@ Please note that interaction is mandatory, as passprompt does not allow for comm
 
 List the names of passwords.
 
-#### `passprompt remove [password name]`
+#### `passprompt remove PASSWORD...`
 
 Remove one or more passwords.
 
-#### `passprompt ask`
+#### `passprompt ask [PASSWORD]`
 
-Maybe interactively prompt for a password at random. Will not prompt if `wait` time has not elapsed (see configuration, below), unless `--always` is specified.
+With an argument, prompt for that password specifically.
 
-#### `passprompt config [config name]`
+Without an argument, maybe prompt for a password at random. Will not prompt if `wait` time has not elapsed (see configuration, below), unless `--always` is specified.
+
+#### `passprompt config KEY [VALUE]`
 
 Set or get a configuration value for passprompt. Used without a second argument, the named config value is retrieved. When the second argument is provided, it's used to set the config value.
 
