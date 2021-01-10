@@ -192,6 +192,10 @@ impl PasswordEntry {
     }
 
     fn hash(salt: &Salt, password: String) -> Result<Hash, Box<dyn std::error::Error>> {
+        if password.len() == 0 {
+            return Err(Box::new(PasspromptError::EmptyPassword));
+        }
+
         let mut hash = [0; 24];
 
         bcrypt::bcrypt(
@@ -201,6 +205,6 @@ impl PasswordEntry {
             &mut hash,
         );
 
-        Ok(Hash::try_from(base64::encode(hash))?)
+        Ok(Hash(hash))
     }
 }

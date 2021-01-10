@@ -7,6 +7,7 @@ pub enum PasspromptError {
   IllegalByteArrayLength { expected: usize, actual: usize },
   UnparseableWaitFormat(String),
   UnknownConfigOption(String),
+  EmptyPassword,
 }
 
 impl fmt::Display for PasspromptError {
@@ -23,6 +24,9 @@ impl fmt::Display for PasspromptError {
       }
       Self::UnknownConfigOption(o) => {
         write!(f, "unknown configuration option '{}'", o)
+      }
+      Self::EmptyPassword => {
+        write!(f, "password is empty")
       }
     }
   }
