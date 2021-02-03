@@ -8,6 +8,7 @@ use crate::commands::CommandResult;
 use crate::config;
 use crate::error::PasspromptError;
 
+#[derive(Debug)]
 pub enum Which {
   Any(usize),
   All,

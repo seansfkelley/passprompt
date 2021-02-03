@@ -61,7 +61,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         .short("n")
                         .takes_value(true)
                         .value_name("COUNT")
-                        .help("Ask n times in a row, or 'all' for all passwords"),
+                        .help("Ask COUNT times in a row, or 'all' for all passwords"),
                 )
                 .group(ArgGroup::with_name("which").args(&["password", "count"])),
         )
@@ -124,7 +124,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     which: commands::AskWhich::from_cli_args(
                         "count".to_string(),
                         matches.value_of("count").map(str::to_string),
-                        matches.value_of("name").map(str::to_string),
+                        matches.value_of("password").map(str::to_string),
                     )?,
                 },
             )?
