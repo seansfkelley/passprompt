@@ -53,7 +53,7 @@ Remove one or more passwords.
 
 With an argument, prompt for that password specifically.
 
-Without an argument, maybe prompt for a password at random. Will not prompt if `wait` time has not elapsed (see configuration, below), unless `--always` is specified.
+Without an argument, maybe prompt for passwords at random. Will not prompt if `wait` time has not elapsed (see configuration, below), unless `--always` is specified. You can prompt for multiple passwords in one go with `-n`.
 
 #### `passprompt config KEY [VALUE]`
 

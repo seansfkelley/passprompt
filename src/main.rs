@@ -1,6 +1,4 @@
-#![feature(const_generics)]
-
-use clap::{crate_version, App, Arg, SubCommand};
+use clap::{crate_version, App, Arg, ArgGroup, SubCommand};
 use xdg::BaseDirectories;
 
 mod commands;
@@ -56,7 +54,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         .long("always")
                         .short("a")
                         .help("Always ask, even if the configured wait time hasn't elapsed"),
-                ),
+                )
+                .arg(
+                    Arg::with_name("count")
+                        .long("count")
+                        .short("n")
+                        .takes_value(true)
+                        .value_name("COUNT")
+                        .help("Ask n times in a row, or 'all' for all passwords"),
+                )
+                .group(ArgGroup::with_name("which").args(&["password", "count"])),
         )
         .subcommand(
             SubCommand::with_name("config")
@@ -114,7 +121,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 &mut config,
                 commands::AskArgs {
                     always: matches.is_present("always"),
-                    name: matches.value_of("password").map(str::to_string),
+                    which: commands::AskWhich::from_cli_args(
+                        "count".to_string(),
+                        matches.value_of("count").map(str::to_string),
+                        matches.value_of("name").map(str::to_string),
+                    )?,
                 },
             )?
         } else {

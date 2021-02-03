@@ -8,6 +8,7 @@ pub enum PasspromptError {
   UnparseableWaitFormat(String),
   UnknownConfigOption(String),
   EmptyPassword,
+  IllegalArgument { name: String, value: String },
 }
 
 impl fmt::Display for PasspromptError {
@@ -27,6 +28,9 @@ impl fmt::Display for PasspromptError {
       }
       Self::EmptyPassword => {
         write!(f, "password is empty")
+      }
+      Self::IllegalArgument { name, value } => {
+        write!(f, "illegal value for argument '{}': {}", name, value)
       }
     }
   }

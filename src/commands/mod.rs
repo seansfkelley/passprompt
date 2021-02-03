@@ -8,6 +8,7 @@ pub use self::add::command as add;
 pub use self::add::Args as AddArgs;
 pub use self::ask::command as ask;
 pub use self::ask::Args as AskArgs;
+pub use self::ask::Which as AskWhich;
 pub use self::config::command as config;
 pub use self::config::Args as ConfigArgs;
 pub use self::list::command as list;
