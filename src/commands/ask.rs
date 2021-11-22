@@ -58,11 +58,6 @@ pub fn command<'a>(
     return Err(Box::new(PasspromptError::NoPasswordsDefined));
   }
 
-  let now = SystemTime::now()
-    .duration_since(SystemTime::UNIX_EPOCH)
-    .unwrap()
-    .as_secs();
-
   let tries = config.retries.unwrap_or_default() + 1;
 
   let success = {
@@ -83,7 +78,7 @@ pub fn command<'a>(
         match config.last_asked {
           Some(last_asked) => {
             let wait_seconds = config.wait.unwrap_or_default().as_secs();
-            if last_asked + wait_seconds >= now {
+            if last_asked + wait_seconds >= now_in_ms() {
               return Ok(CommandResult {
                 should_save: false,
                 success: true,
@@ -117,12 +112,19 @@ pub fn command<'a>(
     }
   };
 
-  config.last_asked = Some(now);
+  config.last_asked = Some(now_in_ms());
 
   Ok(CommandResult {
     should_save: true,
     success,
   })
+}
+
+fn now_in_ms() -> u64 {
+  SystemTime::now()
+    .duration_since(SystemTime::UNIX_EPOCH)
+    .unwrap()
+    .as_secs()
 }
 
 fn ask_one(
