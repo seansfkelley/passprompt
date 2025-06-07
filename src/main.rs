@@ -64,6 +64,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .value_name("COUNT")
             .help("Ask COUNT times in a row, or 'all' for all passwords"),
         )
+        .arg(
+          Arg::with_name("swallow-ctrlc")
+            .long("swallow-ctrlc")
+            .help("Gracefully exit 0 if killed (SIGINT, SIGTERM, SIGHUP)"),
+        )
         .group(ArgGroup::with_name("which").args(&["password", "count"])),
     )
     .subcommand(
@@ -121,6 +126,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         },
       )?
     } else if let Some(matches) = matches.subcommand_matches("ask") {
+      if matches.is_present("swallow-ctrlc") {
+        ctrlc::set_handler(|| std::process::exit(0))?;
+      }
+
       commands::ask(
         &mut config,
         state_manager,
