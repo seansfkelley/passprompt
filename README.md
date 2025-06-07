@@ -4,11 +4,8 @@
 
 ## installation
 
-Build from source using Rust nightly.
-
 ```sh
-rustup install nightly
-cargo +nightly build --release
+cargo build --release
 ```
 
 ## usage

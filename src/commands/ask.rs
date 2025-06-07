@@ -45,6 +45,7 @@ impl Which {
   }
 }
 
+#[derive(Debug)]
 pub struct Args {
   pub always: bool,
   pub which: Which,
