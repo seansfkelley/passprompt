@@ -1,3 +1,5 @@
+use base64::Engine;
+use base64::prelude::BASE64_STANDARD;
 use crypto::bcrypt;
 use regex::{Match, Regex};
 use serde::{Deserialize, Serialize};
@@ -110,14 +112,14 @@ impl TryFrom<String> for Salt {
   type Error = Box<dyn std::error::Error>;
 
   fn try_from(s: String) -> Result<Self, Self::Error> {
-    let bytes = base64::decode(s.as_str())?;
+    let bytes = BASE64_STANDARD.decode(s.as_str())?;
     Ok(Salt(util::byte_vec_to_array(bytes)?))
   }
 }
 
 impl From<Salt> for String {
   fn from(s: Salt) -> Self {
-    base64::encode(&s.0)
+    BASE64_STANDARD.encode(&s.0)
   }
 }
 
@@ -130,14 +132,14 @@ impl TryFrom<String> for Hash {
   type Error = Box<dyn std::error::Error>;
 
   fn try_from(s: String) -> Result<Self, Self::Error> {
-    let bytes = base64::decode(s.as_str())?;
+    let bytes = BASE64_STANDARD.decode(s.as_str())?;
     Ok(Hash(util::byte_vec_to_array(bytes)?))
   }
 }
 
 impl From<Hash> for String {
   fn from(s: Hash) -> Self {
-    base64::encode(&s.0)
+    BASE64_STANDARD.encode(&s.0)
   }
 }
 

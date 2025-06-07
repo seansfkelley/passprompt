@@ -6,12 +6,12 @@ edition = "2024"
 
 [dependencies]
 clap = "2.33.3"
-xdg = "^2.1"
-toml = "0.5.3"
-serde = { version = "1.0.118", features = ["derive"] }
-rpassword = "5.0.0"
-rprompt = "1.0.5"
-rand = "0.8.0"
-base64 = "0.13.0"
+xdg = "^3.0"
+toml = "0.8.23"
+serde = { version = "1.0.219", features = ["derive"] }
+rpassword = "7.4.0"
+rprompt = "2.2.0"
+rand = "0.9.1"
+base64 = "0.22.1"
 rust-crypto = "^0.2"
 regex = "1"

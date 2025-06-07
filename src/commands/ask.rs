@@ -1,6 +1,6 @@
+use rand::rng;
 use rand::seq::SliceRandom;
-use rand::thread_rng;
-use rpassword::prompt_password_stderr;
+use rpassword::prompt_password;
 use std::iter::FromIterator;
 use std::time::SystemTime;
 
@@ -107,7 +107,7 @@ pub fn command<'a>(
       };
 
       let mut names = Vec::from_iter(config.passwords.keys());
-      names.shuffle(&mut thread_rng());
+      names.shuffle(&mut rng());
       names.truncate(count);
 
       let mut success = true;
@@ -146,8 +146,7 @@ fn ask_one(
   let mut success = false;
 
   while tries > 0 {
-    let input =
-      prompt_password_stderr(format!("[passprompt] password for {}: ", password_name).as_str())?;
+    let input = prompt_password(format!("[passprompt] password for {}: ", password_name).as_str())?;
 
     if input.len() > 0 && password_entry.matches(input) {
       success = true;

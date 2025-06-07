@@ -1,8 +1,8 @@
-use base64;
-
+use base64::Engine;
+use base64::prelude::BASE64_STANDARD;
 use rand::prelude::*;
-use rpassword::prompt_password_stderr;
-use rprompt::prompt_reply_stderr;
+use rpassword::prompt_password;
+use rprompt::prompt_reply;
 
 use crate::commands::CommandResult;
 use crate::config;
@@ -19,12 +19,12 @@ pub fn command(
     if let Some(name) = args.name {
       name
     } else {
-      prompt_reply_stderr("name: ")?
+      prompt_reply("name: ")?
     }
   };
 
   if config.passwords.contains_key(&name) {
-    let response = prompt_reply_stderr(
+    let response = prompt_reply(
       format!(
         "there is already a password named '{}', overwrite (y/N)? ",
         name
@@ -41,11 +41,11 @@ pub fn command(
 
   let salt = {
     let mut salt_bytes = [0; 16];
-    rand::thread_rng().fill_bytes(&mut salt_bytes);
-    base64::encode(salt_bytes)
+    rand::rng().fill_bytes(&mut salt_bytes);
+    BASE64_STANDARD.encode(salt_bytes)
   };
 
-  let password = prompt_password_stderr("password: ")?;
+  let password = prompt_password("password: ")?;
 
   config
     .passwords
