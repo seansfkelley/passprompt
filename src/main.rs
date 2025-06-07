@@ -4,6 +4,7 @@ use xdg::BaseDirectories;
 mod commands;
 mod config;
 mod error;
+mod state;
 mod util;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -82,10 +83,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     )
     .get_matches();
 
-  // TODO: Is the xdg library necessary?
   let xdg_dirs = BaseDirectories::with_prefix("passprompt").unwrap();
+
   let config_path = xdg_dirs.place_config_file("config.toml")?;
   let mut config = config::Config::load(&config_path)?;
+
+  let state_path = xdg_dirs.place_config_file("state.toml")?;
+  let state_manager = state::StateManager::for_path(state_path);
 
   let result = {
     if let Some(_) = matches.subcommand_matches("list") {
@@ -119,6 +123,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     } else if let Some(matches) = matches.subcommand_matches("ask") {
       commands::ask(
         &mut config,
+        state_manager,
         commands::AskArgs {
           always: matches.is_present("always"),
           which: commands::AskWhich::from_cli_args(

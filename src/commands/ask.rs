@@ -7,6 +7,7 @@ use std::time::SystemTime;
 use crate::commands::CommandResult;
 use crate::config;
 use crate::error::PasspromptError;
+use crate::state;
 
 #[derive(Debug)]
 pub enum Which {
@@ -53,6 +54,7 @@ pub struct Args {
 
 pub fn command<'a>(
   config: &mut config::Config,
+  state_manager: state::StateManager,
   args: Args,
 ) -> Result<CommandResult, Box<dyn std::error::Error>> {
   if config.passwords.len() == 0 {
@@ -76,17 +78,23 @@ pub fn command<'a>(
       ask_one(tries, &name, entry.unwrap())?
     } else {
       if !args.always {
-        match config.last_asked {
+        let result = state_manager.with_state(|state| match state.last_asked {
           Some(last_asked) => {
             let wait_seconds = config.wait.unwrap_or_default().as_secs();
             if last_asked + wait_seconds >= now_in_ms() {
-              return Ok(CommandResult {
+              Ok(Some(CommandResult {
                 save_config: false,
                 success: true,
-              });
+              }))
+            } else {
+              Ok(None)
             }
           }
-          None => (),
+          None => Ok(None),
+        })?;
+
+        if let Some(command_result) = result {
+          return Ok(command_result);
         }
       }
 
@@ -105,6 +113,10 @@ pub fn command<'a>(
       let mut success = true;
       for name in names {
         let entry = config.passwords.get(name).unwrap();
+        state_manager.with_state(|state| {
+          state.last_asked = Some(now_in_ms());
+          Ok(())
+        })?;
         // Due to short-circuiting, this `&&` is in the opposite order I would normally write it.
         success = ask_one(tries, name, entry)? && success;
       }
@@ -112,8 +124,6 @@ pub fn command<'a>(
       success
     }
   };
-
-  config.last_asked = Some(now_in_ms());
 
   Ok(CommandResult {
     save_config: true,

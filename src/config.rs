@@ -16,7 +16,6 @@ use crate::util;
 pub struct Config {
   pub wait: Option<Wait>,
   pub retries: Option<usize>,
-  pub last_asked: Option<u64>,
   #[serde(default)]
   pub passwords: HashMap<String, PasswordEntry>,
 }
