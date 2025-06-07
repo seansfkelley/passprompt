@@ -12,7 +12,7 @@ pub fn command(config: &config::Config) -> Result<CommandResult, Box<dyn std::er
   }
 
   Ok(CommandResult {
-    should_save: false,
+    save_config: false,
     success: true,
   })
 }

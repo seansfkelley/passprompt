@@ -33,7 +33,7 @@ pub fn command(
     )?;
     if response != "y" && response != "Y" {
       return Ok(CommandResult {
-        should_save: false,
+        save_config: false,
         success: true,
       });
     }
@@ -52,7 +52,7 @@ pub fn command(
     .insert(name, config::PasswordEntry::create(salt, password)?);
 
   Ok(CommandResult {
-    should_save: true,
+    save_config: true,
     success: true,
   })
 }

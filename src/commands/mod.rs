@@ -16,6 +16,6 @@ pub use self::remove::Args as RemoveArgs;
 pub use self::remove::command as remove;
 
 pub struct CommandResult {
-  pub should_save: bool,
+  pub save_config: bool,
   pub success: bool,
 }

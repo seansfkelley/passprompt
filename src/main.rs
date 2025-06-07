@@ -131,13 +131,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     } else {
       eprintln!("{}", matches.usage());
       commands::CommandResult {
-        should_save: false,
+        save_config: false,
         success: true,
       }
     }
   };
 
-  if result.should_save {
+  if result.save_config {
     config.store(&config_path)?;
   }
 

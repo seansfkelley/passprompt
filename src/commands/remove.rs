@@ -19,7 +19,7 @@ pub fn command(
   }
 
   Ok(CommandResult {
-    should_save: true,
+    save_config: true,
     success: true,
   })
 }
