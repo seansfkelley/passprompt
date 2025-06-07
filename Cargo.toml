@@ -1,8 +1,8 @@
 [package]
-rust-version = "1.60"
+rust-version = "1.87.0"
 name = "passprompt"
 version = "0.1.0"
-edition = "2018"
+edition = "2024"
 
 [dependencies]
 clap = "2.33.3"
