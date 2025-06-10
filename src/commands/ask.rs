@@ -112,13 +112,25 @@ pub fn command<'a>(
 
       let mut success = true;
       for name in names {
-        let entry = config.passwords.get(name).unwrap();
+        // A bit weird written like this, but the idea is to commit, to disk, the ask time before
+        // and after every prompt. We don't know if/when the prompt might be answered, or if the
+        // first one is answered and the second is left to idle, but we want to make sure we record
+        // the time on any interaction -- when the user did cause them to be asked _or_ when they
+        // responded.
         state_manager.with_state(|state| {
           state.last_asked = Some(now_in_ms());
           Ok(())
         })?;
+
+        let response = state_manager.with_state(|state| {
+          let entry = config.passwords.get(name).unwrap();
+          let result = ask_one(tries, name, entry);
+          state.last_asked = Some(now_in_ms());
+          result
+        })?;
+
         // Due to short-circuiting, this `&&` is in the opposite order I would normally write it.
-        success = ask_one(tries, name, entry)? && success;
+        success = response && success;
       }
 
       success
